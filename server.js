@@ -20,7 +20,13 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/ai', require('./src/routes/ai'));
 app.use('/api/tests', require('./src/routes/tests'));
 
+// Catch-all Route für Single Page Application (SPA)
+// Wichtig für Hosting: Alle unbekannten Routen gehen an index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Start Server
 app.listen(PORT, () => {
-    console.log(`🚀 Server läuft auf http://localhost:${PORT}`);
+    console.log(`🚀 Server läuft auf Port ${PORT}`);
 });
