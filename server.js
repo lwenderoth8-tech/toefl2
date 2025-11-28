@@ -22,7 +22,7 @@ app.use('/api/tests', require('./src/routes/tests'));
 
 // Catch-all Route für Single Page Application (SPA)
 // Wichtig für Hosting: Alle unbekannten Routen gehen an index.html
-app.get('*', (req, res) => {
+app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
