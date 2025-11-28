@@ -3,6 +3,20 @@ const router = express.Router();
 const { callOpenAI } = require('../api/openai');
 const { Translation } = require('../db/models');
 
+// NEU: Test-Route für Verbindung
+router.get('/test-connection', async (req, res) => {
+    try {
+        console.log("Testing OpenAI connection...");
+        const result = await callOpenAI([
+            { role: "user", content: "Say 'Connection successful' if you can hear me." }
+        ]);
+        res.json({ status: 'ok', message: result });
+    } catch (error) {
+        console.error("Connection Test Failed:", error);
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+});
+
 router.post('/process', async (req, res) => {
     const { text, action, language } = req.body;
     
@@ -19,10 +33,14 @@ router.post('/process', async (req, res) => {
             The text must be in English. The questions must be in German.`;
 
             try {
-                const result = await callOpenAI([
+                let result = await callOpenAI([
                     { role: "system", content: systemPrompt },
                     { role: "user", content: "Generate a new test now." }
                 ], 'json');
+                
+                // Clean up potential Markdown formatting
+                result = result.replace(/```json/g, '').replace(/```/g, '').trim();
+
                 return res.json({ result: JSON.parse(result) });
             } catch (aiError) {
                 console.error("OpenAI Failed, using Fallback:", aiError.message);
@@ -82,20 +100,35 @@ router.post('/process', async (req, res) => {
             `;
         }
 
-        const result = await callOpenAI([
-            { role: "system", content: systemPrompt },
-            { role: "user", content: text }
-        ]);
+        try {
+            const result = await callOpenAI([
+                { role: "system", content: systemPrompt },
+                { role: "user", content: text }
+            ]);
 
-        // Speichern für Statistik
-        await Translation.create({
-            originalText: text,
-            translatedText: result,
-            type: action,
-            language: language
-        });
+            // Speichern für Statistik
+            await Translation.create({
+                originalText: text,
+                translatedText: result,
+                type: action,
+                language: language
+            });
 
-        res.json({ result });
+            res.json({ result });
+        } catch (error) {
+            console.error(`OpenAI Failed (Action: ${action}), using Fallback:`, error.message);
+            
+            let mockResult = "";
+            if (action === 'translate') {
+                mockResult = `[DEMO] Übersetzung: "${text}" (API-Key fehlt)`;
+            } else if (action === 'simplify') {
+                mockResult = `[DEMO] Vereinfachung: Dies ist eine vereinfachte Version des Textes. (API-Key fehlt)`;
+            } else if (action === 'explain') {
+                mockResult = `[DEMO] Erklärung: Dies ist eine Erklärung für "${text}". (API-Key fehlt)`;
+            }
+            
+            res.json({ result: mockResult });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

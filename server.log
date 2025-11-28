@@ -1,0 +1,27 @@
+
+> isad-app@1.0.0 start
+> node server.js
+
+[dotenv@17.2.3] injecting env (4) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+🚀 Server läuft auf Port 3000
+✅ Verbunden mit MongoDB
+[OpenAI] Sending request to model: gpt-4o-mini
+[OpenAI] Sending request to model: gpt-4o-mini
+[OpenAI] API Error Details: {
+  error: {
+    message: 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************P7cA. You can find your API key at https://platform.openai.com/account/api-keys.',
+    type: 'invalid_request_error',
+    code: 'invalid_api_key',
+    param: null
+  }
+}
+OpenAI Failed, using Fallback: OpenAI API Key ist ungültig oder fehlt.
+[OpenAI] API Error Details: {
+  error: {
+    message: 'Incorrect API key provided: sk-proj-********************************************************************************************************************************************************P7cA. You can find your API key at https://platform.openai.com/account/api-keys.',
+    type: 'invalid_request_error',
+    code: 'invalid_api_key',
+    param: null
+  }
+}
+OpenAI Failed, using Fallback: OpenAI API Key ist ungültig oder fehlt.

@@ -11,9 +11,9 @@ async function checkAndTrackUsage(usageData) {
     }
 
     // Check Limit VOR der Anfrage (basierend auf bisherigem Verbrauch)
-    if (usageRecord.totalTokensUsed >= TOKEN_LIMIT) {
-        throw new Error(`TOKEN LIMIT REACHED: ${usageRecord.totalTokensUsed} / ${TOKEN_LIMIT}. Please reset in code/database.`);
-    }
+    // if (usageRecord.totalTokensUsed >= TOKEN_LIMIT) {
+    //     throw new Error(`TOKEN LIMIT REACHED: ${usageRecord.totalTokensUsed} / ${TOKEN_LIMIT}. Please reset in code/database.`);
+    // }
 
     // Wenn usageData übergeben wurde (NACH der Anfrage), aktualisieren
     if (usageData && usageData.total_tokens) {
@@ -25,10 +25,10 @@ async function checkAndTrackUsage(usageData) {
 }
 
 async function callOpenAI(messages, responseFormat = null) {
-    console.log("callOpenAI started. Checking limits...");
-    // 1. Check Limit
+    // 1. Check Limit (nur Tracking)
     await checkAndTrackUsage();
-    console.log("Limit check passed. Calling OpenAI API...");
+
+    console.log(`[OpenAI] Sending request to model: ${MODEL_NAME}`);
 
     try {
         const payload = {
@@ -51,17 +51,26 @@ async function callOpenAI(messages, responseFormat = null) {
                 }
             }
         );
-        
-        console.log("OpenAI API response received.");
 
         // 2. Track Usage
-        await checkAndTrackUsage(response.data.usage);
+        if (response.data.usage) {
+            await checkAndTrackUsage(response.data.usage);
+        }
 
+        console.log("[OpenAI] Response received successfully.");
         return response.data.choices[0].message.content;
+
     } catch (error) {
-        console.error('OpenAI API Error Details:', error.response ? JSON.stringify(error.response.data) : error.message);
-        if (error.message.includes('TOKEN LIMIT')) throw error;
-        throw new Error('Fehler bei der KI-Anfrage: ' + (error.response?.data?.error?.message || error.message));
+        console.error('[OpenAI] API Error Details:', error.response ? error.response.data : error.message);
+        
+        if (error.response && error.response.status === 401) {
+            throw new Error('OpenAI API Key ist ungültig oder fehlt.');
+        }
+        if (error.response && error.response.status === 429) {
+            throw new Error('OpenAI Rate Limit oder Quota überschritten (Guthaben leer?).');
+        }
+        
+        throw new Error(`OpenAI Fehler: ${error.message}`);
     }
 }
 
